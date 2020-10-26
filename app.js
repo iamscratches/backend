@@ -2,7 +2,7 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const process = require('../nodemon.json');
+const process = require('./nodemon.json');
 const app = express();
 
 const postRoutes = require('./routes/post');
