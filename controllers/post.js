@@ -1,37 +1,60 @@
 const Post = require('../models/post');
+var admin = require("firebase-admin");
+var serviceAccount = require("../ServiceAccountKey.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://scratchgram-39bb2.firebaseio.com"
+});
 //          CREATE POST
 exports.createPosts = (req, res, next) => {
-  const url = req.protocol + "://" + req.get("host");
-  const post = new Post({
-    title : req.body.title,
-    content : req.body.content,
-    imagePath : url + "/images/" + req.file.filename,
-    creator: req.userData.userId
-  });
-  post.save().then(createdPost => {
-    res.status(201).json({//everything OK with a new resource being created
-      message : 'Post added successfully',
-      post:{
-        id : createdPost._id,
-        title: createdPost.title,
-        content: createdPost.content,
-        imagePath: createdPost.imagePath
-      }
+  // const url = req.protocol + "://" + req.get("host");
+  admin.storage().bucket('scratchgram-39bb2.appspot.com').upload(req.file.path).then((snapshot) => {
+    console.log("Sucessfully added");
+    // console.log(snapshot.ref.getDownloadURL());
+    // console.log(snapshot[0].metadata.mediaLink);
+    var imagePath = snapshot[0].metadata.mediaLink;
+    const post = new Post({
+      title : req.body.title,
+      content : req.body.content,
+      imagePath : imagePath,
+      creator: req.userData.userId
     });
-  }).catch(error => {
-    res.status(500).json({
-      message: "Something went wrong while saving ur post pls try again!!"
-    })
-  });
+    post.save().then(createdPost => {
+      res.status(201).json({//everything OK with a new resource being created
+        message : 'Post added successfully',
+        post:{
+          id : createdPost._id,
+          title: createdPost.title,
+          content: createdPost.content,
+          imagePath: createdPost.imagePath
+        }
+      });
+    }).catch(error => {
+      // console.log(error);
+      res.status(500).json({      
+        message: "Something went wrong while saving ur post pls try again!!"
+      })
+    });
+  }).catch(err => {
+    console.log(err);
+  })
+  
 }
 //         UPDATE POST
-exports.updatePost = (req,res,next) => {
-  //console.log(req.file);
+exports.updatePost = async (req,res,next) => {
+  // console.log(req.file);
+  // console.log(req.body);
   let imagePath = req.body.imagePath;
+  // console.log(imagePath);
   if(req.file){
-    const url = req.protocol + "://" + req.get("host");
-    imagePath = url + "/images/" + req.file.filename;
-
+    // const url = req.protocol + "://" + req.get("host");
+    // imagePath = url + "/images/" + req.file.filename;
+    const store = await admin.storage().bucket('scratchgram-39bb2.appspot.com').upload(req.file.path).then((snapshot) => {
+      console.log("Sucessfully added");
+      // console.log(snapshot.ref.getDownloadURL());
+      // console.log(snapshot[0].metadata.mediaLink);
+      imagePath = snapshot[0].metadata.mediaLink;
+    })
   }
 
   const post = new Post({

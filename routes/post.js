@@ -4,6 +4,7 @@ const router = express.Router();
 const checkAuth = require('../middleware/check-auth');
 const PostController = require('../controllers/post');
 const extractFile = require('../middleware/file');
+// const upload = require('../test')
 router.post('', checkAuth, extractFile, PostController.createPosts);
 //3IXLHW75ihl7NHj1
 
